@@ -84,7 +84,7 @@ class RecordTranslator {
   toPhysical(row, column) {
     let result;
 
-    if (isObject(row)) {
+    if (typeof row === 'object') {
       result = {
         row: this.toPhysicalRow(row.row),
         column: this.toPhysicalColumn(row.column),

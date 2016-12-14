@@ -413,9 +413,13 @@ var textContextSupport = document.createTextNode('test').textContent ? true : fa
 export function fastInnerText(element, content) {
   var child = element.firstChild;
 
-  if (child && child.nodeType === 3 && child.nextSibling === null) {
+  if (!child || child.nodeType !== 3 || child.nextSibling !== null) {
+    empty(element);
+    if (content !== '') {
+      element.appendChild(document.createTextNode(content));
+    }
+  } else {
     // fast lane - replace existing text node
-
     if (textContextSupport) {
       // http://jsperf.com/replace-text-vs-reuse
       child.textContent = content;
@@ -423,10 +427,6 @@ export function fastInnerText(element, content) {
       // http://jsperf.com/replace-text-vs-reuse
       child.data = content;
     }
-  } else {
-    //slow lane - empty element and insert a text node
-    empty(element);
-    element.appendChild(document.createTextNode(content));
   }
 }
 
