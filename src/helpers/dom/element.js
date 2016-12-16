@@ -422,7 +422,7 @@ export function fastInnerText(element, content) {
     // fast lane - replace existing text node
     if (textContextSupport) {
       // http://jsperf.com/replace-text-vs-reuse
-      child.textContent = content;
+      element.textContent = content;
     } else {
       // http://jsperf.com/replace-text-vs-reuse
       child.data = content;
