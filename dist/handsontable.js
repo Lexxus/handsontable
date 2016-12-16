@@ -4474,7 +4474,7 @@ var domHelpers = ($__helpers_47_dom_47_element__ = _dereq_("helpers/dom/element"
 var domEventHelpers = ($__helpers_47_dom_47_event__ = _dereq_("helpers/dom/event"), $__helpers_47_dom_47_event__ && $__helpers_47_dom_47_event__.__esModule && $__helpers_47_dom_47_event__ || {default: $__helpers_47_dom_47_event__});
 var HELPERS = [arrayHelpers, browserHelpers, dataHelpers, dateHelpers, featureHelpers, functionHelpers, mixedHelpers, numberHelpers, objectHelpers, settingHelpers, stringHelpers, unicodeHelpers];
 var DOM = [domHelpers, domEventHelpers];
-Handsontable.buildDate = 'Wed Dec 14 2016 19:02:46 GMT+0200 (FLE Standard Time)';
+Handsontable.buildDate = 'Fri Dec 16 2016 13:31:17 GMT+0200 (FLE Standard Time)';
 Handsontable.packageName = 'handsontable';
 Handsontable.version = '0.29.99';
 var baseVersion = '@@baseVersion';
@@ -10904,9 +10904,25 @@ var Attr = function Attr(name, value) {
   this.value = value;
 };
 ($traceurRuntime.createClass)(Attr, {}, {});
-var VirtualAttributes = function VirtualAttributes(element) {
+var VirtualAttributes = function VirtualAttributes(element, attributes) {
   this._element = element;
   this.length = 0;
+  if (typeof attributes === 'object') {
+    var keys = Object.keys(attributes);
+    var len = keys.length;
+    for (var i = 0,
+        n = 0,
+        name; i < len; i++) {
+      name = keys[i];
+      if (typeof this[name] !== 'function') {
+        this[n++] = this[name] = new Attr(name, attributes[name]);
+        this.length++;
+        if (name === 'class') {
+          this._element._className = attributes.class;
+        }
+      }
+    }
+  }
 };
 ($traceurRuntime.createClass)(VirtualAttributes, {
   item: function(i) {
@@ -10931,7 +10947,7 @@ var VirtualAttributes = function VirtualAttributes(element) {
       this[name] = attr;
       this[i] = attr;
       if (name === 'class' && !noClass && typeof attr.value === 'string') {
-        this._element.className = attr.value;
+        this._element._className = attr.value;
       }
     }
   },
@@ -10945,13 +10961,23 @@ var VirtualAttributes = function VirtualAttributes(element) {
         }
       }
       if (i >= 0) {
-        this[name] = void 0;
-        this[i] = void 0;
+        this[name] = undefined;
+        this[i] = undefined;
+        this.length--;
         if (name === 'class') {
-          this._element.className = '';
+          this._element._className = '';
         }
       }
     }
+  },
+  toJSON: function() {
+    var json = {};
+    var i = this.length;
+    while (i-- > 0) {
+      var attr = this[i];
+      json[attr.name] = attr.value;
+    }
+    return json;
   }
 }, {});
 ;
@@ -10976,17 +11002,22 @@ var $__2 = ($__virtualAttributes__ = _dereq_("virtualAttributes"), $__virtualAtt
     Attr = $__2.Attr,
     VirtualAttributes = $__2.VirtualAttributes;
 var htmlWrapper = document.createElement('DIV');
-var VirtualElement = function VirtualElement(nodeName) {
-  this.classList = new ClassList(this);
-  this.attributes = new VirtualAttributes(this);
+var VirtualElement = function VirtualElement(nodeName, className, children) {
+  var classNameType = typeof className;
+  var childrenType = typeof children;
+  var attributes = classNameType === 'object' ? className : undefined;
   this.isVirtual = true;
-  this.nodeName = nodeName || 'DIV';
+  this.nodeName = nodeName ? nodeName.toUpperCase() : 'DIV';
   this.nodeType = 1;
-  this.textContent = '';
-  this.firstChild = null;
-  this.lastChild = null;
-  this.children = [];
+  this.textContent = childrenType === 'string' ? children : '';
+  if (childrenType === 'object') {
+    this.children = Array.isArray(children) ? children : [children];
+  } else {
+    this.children = [];
+  }
   this.childNodes = this.children;
+  this.firstChild = this.children[0] || null;
+  this.lastChild = this.children[this.children.length - 1] || null;
   this.style = {};
   Object.defineProperty(this, '_className', {
     writable: true,
@@ -10997,7 +11028,13 @@ var VirtualElement = function VirtualElement(nodeName) {
     value: ''
   });
   Object.defineProperty(this, '_htmlWrapper', {value: htmlWrapper});
+  this.classList = new ClassList(this);
+  this.attributes = new VirtualAttributes(this, attributes);
+  if (classNameType === 'string') {
+    this.className = className;
+  }
 };
+var $VirtualElement = VirtualElement;
 ($traceurRuntime.createClass)(VirtualElement, {
   set className(value) {
     this._className = value;
@@ -11042,7 +11079,7 @@ var VirtualElement = function VirtualElement(nodeName) {
     return this.lastChild;
   },
   reset: function(nodeName) {
-    this.nodeName = nodeName || 'DIV';
+    this.nodeName = nodeName ? nodeName.toUpperCase() : 'DIV';
     this._className = '';
     this.textContent = '';
     this.style = {};
@@ -11066,6 +11103,7 @@ var VirtualElement = function VirtualElement(nodeName) {
       }
       element.appendChild(child);
     }
+    return element;
   },
   cloneFrom: function(node) {
     var child = node.firstChild;
@@ -11146,6 +11184,24 @@ var VirtualElement = function VirtualElement(nodeName) {
       empty(node);
     }
   },
+  cloneNode: function(withChildren) {
+    var node = new $VirtualElement(this.nodeName, this.attributes.toJSON());
+    var i,
+        len;
+    node.textContent = this.textContent;
+    if (withChildren) {
+      len = this.children.length;
+      if (len) {
+        for (i = 0; i < len; i++) {
+          var child = this.children[i];
+          node.children.push(child.cloneNode());
+        }
+        node.firstChild = node.children[0];
+        node.lastChild = node.children[len - 1];
+      }
+    }
+    return node;
+  },
   removeChild: function(node) {
     var children = this.children;
     var i = -1;
@@ -11191,11 +11247,23 @@ var VirtualElement = function VirtualElement(nodeName) {
     this.attributes.removeNamedItem(name);
   },
   getAttribute: function(name) {
-    return this.attributes[name] || null;
+    return this.attributes[name] ? this.attributes[name].value : null;
+  },
+  getElementsByTagName: function(tagName) {
+    var result = [];
+    var tag = tagName.toUpperCase();
+    var len = this.children.length;
+    for (var i = 0; i < len; i++) {
+      var node = this.children[i];
+      if (node.nodeName === tag) {
+        result.push(node);
+      }
+    }
+    return result;
   }
 }, {});
 ;
-window.VirtualElement = VirtualElement;
+window.VirtualElement = window.VirtualElement || VirtualElement;
 
 //# 
 },{"classList":46,"element":47,"virtualAttributes":49}],51:[function(_dereq_,module,exports){
