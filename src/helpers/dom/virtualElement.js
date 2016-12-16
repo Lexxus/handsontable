@@ -15,20 +15,28 @@ class VirtualElement {
    * Constructor
    *
    * @param {string} [nodeName='DIV'] - tag name.
+   * @param {string|Object} [className] - className value or set of attributes.
+   * @param {Array|Object|string|Node} [children] - the element content.
    */
-  constructor(nodeName) {
-    this.classList = new ClassList(this);
-    this.attributes = new VirtualAttributes(this);
+  constructor(nodeName, className, children) {
+    const classNameType = typeof className;
+    const childrenType = typeof children;
+    const attributes = classNameType === 'object' ? className : undefined;
 
     this.isVirtual = true;
-    this.nodeName = nodeName || 'DIV';
+    this.nodeName = nodeName ? nodeName.toUpperCase() : 'DIV';
     this.nodeType = 1;
-    this.textContent = '';
-    this.firstChild = null;
-    this.lastChild = null;
-    this.children = [];
+    this.textContent = childrenType === 'string' ? children : '';
+    if (childrenType === 'object') {
+      this.children = Array.isArray(children) ? children : [children];
+    } else {
+      this.children = [];
+    }
     this.childNodes = this.children;
+    this.firstChild = this.children[0] || null;
+    this.lastChild = this.children[this.children.length - 1] || null;
     this.style = {};
+
     // private properties must be not enumerable
     Object.defineProperty(this, '_className', {
       writable: true,
@@ -41,6 +49,13 @@ class VirtualElement {
     Object.defineProperty(this, '_htmlWrapper', {
       value: htmlWrapper
     });
+
+    this.classList = new ClassList(this);
+    this.attributes = new VirtualAttributes(this, attributes);
+
+    if (classNameType === 'string') {
+      this.className = className;
+    }
   }
 
   set className(value) {
@@ -98,7 +113,7 @@ class VirtualElement {
    * @param {string} [nodeName] - default 'DIV'
    */
   reset(nodeName) {
-    this.nodeName = nodeName || 'DIV';
+    this.nodeName = nodeName ? nodeName.toUpperCase() : 'DIV';
     this._className = '';
     this.textContent = '';
 
@@ -136,6 +151,8 @@ class VirtualElement {
       }
       element.appendChild(child);
     }
+
+    return element;
   }
 
   /**
@@ -201,12 +218,20 @@ class VirtualElement {
     // apply attributes
     for (i = 0, len = attrs.length; i < len; i++) {
       let attr = attrs[i];
+      const attributes = node.attributes;
+      let nodeAttr;
 
       name = attr.name;
       if (name !== 'class') {
         value = attr.value;
-        if (node.getAttribute(name) !== value) {
+        // if (node.getAttribute(name) !== value) {
+        //   node.setAttribute(name, value);
+        // }
+        nodeAttr = attributes[name];
+        if (!nodeAttr) {
           node.setAttribute(name, value);
+        } else if (nodeAttr.value !== value) {
+          nodeAttr.value = value;
         }
       }
     }
@@ -235,6 +260,31 @@ class VirtualElement {
     } else {
       empty(node);
     }
+  }
+
+  /**
+   *
+   */
+  cloneNode(withChildren) {
+    const node = new VirtualElement(this.nodeName, this.attributes.toJSON());
+    let i, len;
+
+    node.textContent = this.textContent;
+
+    // clone children
+    if (withChildren) {
+      len = this.children.length;
+      if (len) {
+        for (i = 0; i < len; i++) {
+          let child = this.children[i];
+          node.children.push(child.cloneNode());
+        }
+        node.firstChild = node.children[0];
+        node.lastChild = node.children[len - 1];
+      }
+    }
+
+    return node;
   }
 
   /**
@@ -299,10 +349,24 @@ class VirtualElement {
   }
 
   getAttribute(name) {
-    return this.attributes[name] || null;
+    return this.attributes[name] ? this.attributes[name].value : null;
+  }
+
+  getElementsByTagName(tagName) {
+    const result = [];
+    const tag = tagName.toUpperCase();
+    const len = this.children.length;
+
+    for (let i = 0; i < len; i++) {
+      const node = this.children[i];
+      if (node.nodeName === tag) {
+        result.push(node);
+      }
+    }
+    return result;
   }
 }
 
 export {VirtualElement};
 
-window.VirtualElement = VirtualElement;
+window.VirtualElement = window.VirtualElement || VirtualElement;
