@@ -13,9 +13,10 @@ import {getRenderer, registerRenderer} from './../renderers';
  * @param cellProperties
  */
 function passwordRenderer(instance, TD, row, col, prop, value, cellProperties) {
-  getRenderer('text').apply(this, arguments);
+  // call is faster than apply http://docs.handsontable.com/tutorial-good-practices.html
+  getRenderer('text').call(this, instance, TD, row, col, prop, value, cellProperties);
 
-  value = TD.innerHTML;
+  value = TD.textContent;
 
   var hash;
   var hashLength = cellProperties.hashLength || value.length;

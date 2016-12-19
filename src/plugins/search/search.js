@@ -113,8 +113,9 @@ Handsontable.SearchCellDecorator = function(instance, TD, row, col, prop, value,
 var originalBaseRenderer = getRenderer('base');
 
 registerRenderer('base', function(instance, TD, row, col, prop, value, cellProperties) {
-  originalBaseRenderer.apply(this, arguments);
-  Handsontable.SearchCellDecorator.apply(this, arguments);
+  // .call is faster than .apply http://docs.handsontable.com/tutorial-good-practices.html
+  originalBaseRenderer.call(this, instance, TD, row, col, prop, value, cellProperties);
+  Handsontable.SearchCellDecorator.call(this, instance, TD, row, col, prop, value, cellProperties);
 });
 
 function init() {

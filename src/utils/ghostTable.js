@@ -4,6 +4,7 @@ import {arrayEach} from './../helpers/array';
 import {objectEach} from './../helpers/object';
 import {rangeEach} from './../helpers/number';
 import {stringify} from './../helpers/mixed';
+import {VirtualElement} from './../helpers/dom/virtualElement';
 
 /**
  * @class GhostTable
@@ -255,10 +256,10 @@ class GhostTable {
         cellProperties.row = row;
 
         let renderer = this.hot.getCellRenderer(cellProperties);
-        const td = d.createElement('td');
+        const td = new VirtualElement('TD');
 
         renderer(this.hot, td, row, column, this.hot.colToProp(column), string.value, cellProperties);
-        fragment.appendChild(td);
+        fragment.appendChild(td.createElement());
       });
     });
 
@@ -308,11 +309,11 @@ class GhostTable {
         cellProperties.row = row;
 
         let renderer = this.hot.getCellRenderer(cellProperties);
-        const td = d.createElement('td');
+        const td = new VirtualElement('TD');
         const tr = d.createElement('tr');
 
         renderer(this.hot, td, row, column, this.hot.colToProp(column), string.value, cellProperties);
-        tr.appendChild(td);
+        tr.appendChild(td.createElement());
         fragment.appendChild(tr);
       });
     });

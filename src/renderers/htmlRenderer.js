@@ -13,7 +13,8 @@ import {getRenderer, registerRenderer} from './../renderers';
  * @param cellProperties
  */
 function htmlRenderer(instance, TD, row, col, prop, value, cellProperties) {
-  getRenderer('base').apply(this, arguments);
+  // call is faster than apply http://docs.handsontable.com/tutorial-good-practices.html
+  getRenderer('base').call(this, instance, TD, row, col, prop, value, cellProperties);
 
   if (value === null || value === void 0) {
     value = '';

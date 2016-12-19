@@ -23,7 +23,8 @@ const BAD_VALUE_CLASS = 'htBadValue';
  * @param {Object} cellProperties Cell properties (shared by cell renderer and editor)
  */
 function checkboxRenderer(instance, TD, row, col, prop, value, cellProperties) {
-  getRenderer('base').apply(this, arguments);
+  // .call is faster than .apply http://docs.handsontable.com/tutorial-good-practices.html
+  getRenderer('base').call(this, instance, TD, row, col, prop, value, cellProperties);
 
   const eventManager = registerEvents(instance);
   let input = createInput();

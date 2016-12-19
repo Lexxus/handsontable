@@ -32,22 +32,24 @@ var wrapTdContentWithWrapper = function(TD, WRAPPER) {
  * @param {Object} cellProperties Cell properites (shared by cell renderer and editor)
  */
 function autocompleteRenderer(instance, TD, row, col, prop, value, cellProperties) {
-  var WRAPPER = clonableWRAPPER.cloneNode(true); //this is faster than createElement
-  var ARROW = clonableARROW.cloneNode(true); //this is faster than createElement
+  var WRAPPER = clonableWRAPPER.cloneNode(true); // this is faster than createElement
+  var ARROW = clonableARROW.cloneNode(true); // this is faster than createElement
 
   if (cellProperties.allowHtml) {
-    getRenderer('html').apply(this, arguments);
+    // .call is faster than .apply http://docs.handsontable.com/tutorial-good-practices.html
+    getRenderer('html').call(this, instance, TD, row, col, prop, value, cellProperties);
   } else {
-    getRenderer('text').apply(this, arguments);
+    // .call is faster than .apply http://docs.handsontable.com/tutorial-good-practices.html
+    getRenderer('text').call(this, instance, TD, row, col, prop, value, cellProperties);
   }
 
   TD.appendChild(ARROW);
   addClass(TD, 'htAutocomplete');
 
-  if (!TD.firstChild) { //http://jsperf.com/empty-node-if-needed
-    //otherwise empty fields appear borderless in demo/renderers.html (IE)
+  if (!TD.firstChild) { // http://jsperf.com/empty-node-if-needed
+    // otherwise empty fields appear borderless in demo/renderers.html (IE)
     TD.appendChild(document.createTextNode(String.fromCharCode(160))); // workaround for https://github.com/handsontable/handsontable/issues/1946
-    //this is faster than innerHTML. See: https://github.com/handsontable/handsontable/wiki/JavaScript-&-DOM-performance-tips
+    // this is faster than innerHTML. See: https://github.com/handsontable/handsontable/wiki/JavaScript-&-DOM-performance-tips
   }
 
   if (!instance.acArrowListener) {
