@@ -37,7 +37,7 @@ class VirtualElement {
     this.lastChild = this.children[this.children.length - 1] || null;
     this.style = {};
 
-    // private properties must be not enumerable.
+    // private properties must not be enumerable.
     Object.defineProperty(this, '_className', {
       writable: true,
       value: ''

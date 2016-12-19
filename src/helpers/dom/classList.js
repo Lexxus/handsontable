@@ -9,7 +9,7 @@ class ClassList {
   /**
    * Checks if specified class value exists in class attribute of the element.
    *
-   * @params {string} value - class name to check.
+   * @param {string} value - class name to check.
    * @returns {boolean} true if class value is exists.
    */
   contains(value) {
