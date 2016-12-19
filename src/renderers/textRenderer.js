@@ -16,6 +16,7 @@ import {getRenderer, registerRenderer} from './../renderers';
  * @param {Object} cellProperties Cell properties (shared by cell renderer and editor)
  */
 function textRenderer(instance, TD, row, col, prop, value, cellProperties) {
+  // .call is faster than .apply http://docs.handsontable.com/tutorial-good-practices.html
   getRenderer('base').call(this, instance, TD, row, col, prop, value, cellProperties);
 
   if (!value && cellProperties.placeholder) {

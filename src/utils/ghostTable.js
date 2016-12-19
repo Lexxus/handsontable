@@ -256,7 +256,6 @@ class GhostTable {
         cellProperties.row = row;
 
         let renderer = this.hot.getCellRenderer(cellProperties);
-        // const td = d.createElement('td');
         const td = new VirtualElement('TD');
 
         renderer(this.hot, td, row, column, this.hot.colToProp(column), string.value, cellProperties);
@@ -310,7 +309,6 @@ class GhostTable {
         cellProperties.row = row;
 
         let renderer = this.hot.getCellRenderer(cellProperties);
-        // const td = d.createElement('td');
         const td = new VirtualElement('TD');
         const tr = d.createElement('tr');
 
