@@ -320,9 +320,15 @@ class VirtualElement {
   /**
    * Append child node.
    *
-   * @param {Element|VirtualElement} node - to append.
+   * @param {Element|VirtualElement|string} node - node to append or tag name to create a node on the fly.
+   * @param {string|Object} [className] - className value or set of attributes if creating a node.
+   * @param {Array|Object|string|Node} [children] - the element content if creating a node.
    */
-  appendChild(node) {
+  appendChild(node, attributes, children) {
+    if (typeof node === 'string') {
+      // create a child on the fly
+      node = new VirtualElement(node, attributes, children);
+    }
     if (node.nodeType === 3) {
       this.textContent = node.textContent;
     } else {
