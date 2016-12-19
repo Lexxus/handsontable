@@ -8,7 +8,7 @@ import {Attr, VirtualAttributes} from './virtualAttributes';
 const htmlWrapper = document.createElement('DIV');
 
 /**
- * @class VirtualElement
+ * @class VirtualElement.
  */
 class VirtualElement {
   /**
@@ -16,7 +16,7 @@ class VirtualElement {
    *
    * @param {string} [nodeName='DIV'] - tag name.
    * @param {string|Object} [className] - className value or set of attributes.
-   * @param {Array|Object|string|Node} [children] - the element content.
+   * @param {Array|Object|string|DOMNode} [children] - the element content.
    */
   constructor(nodeName, className, children) {
     const classNameType = typeof className;
@@ -37,7 +37,7 @@ class VirtualElement {
     this.lastChild = this.children[this.children.length - 1] || null;
     this.style = {};
 
-    // private properties must be not enumerable
+    // private properties must be not enumerable.
     Object.defineProperty(this, '_className', {
       writable: true,
       value: ''
@@ -58,6 +58,11 @@ class VirtualElement {
     }
   }
 
+  /**
+   * Setter of className property.
+   *
+   * @params {string} value - value for "class" attribure.
+   */
   set className(value) {
     this._className = value;
     if (this.attributes.class) {
@@ -67,10 +72,20 @@ class VirtualElement {
     }
   }
 
+  /**
+   * Getter of className property.
+   *
+   * @returns {string} value of "class" attribute.
+   */
   get className() {
     return this._className;
   }
 
+  /**
+   * Setter of innerHTML property.
+   *
+   * @param {string} value - HTML string.
+   */
   set innerHTML(value) {
     let children, i, len;
 
@@ -87,22 +102,48 @@ class VirtualElement {
     this.lastChild = this.children[len - 1];
   }
 
+  /**
+   * Getter of innerHTML property.
+   *
+   * @returns {string} HTML string that isn't related to actual children set in the element.
+   *   It just returns the last set value.
+   */
   get innerHTML() {
     return this._innerHTML;
   }
 
+  /**
+   * Setter of innerText property.
+   *
+   * @param {string} value - text.
+   */
   set innerText(value) {
     this.textContent = value;
   }
 
+  /**
+   * Getter of innerText property.
+   *
+   * @returns {string} text.
+   */
   get innerText() {
     return this.textContent;
   }
 
+  /**
+   * Getter of firstElementChild peroperty.
+   *
+   * @returns {VirtualElement|DOMNode} the first children or null.
+   */
   get firstElementChild() {
     return this.firstChild;
   }
 
+  /**
+   * Getter of lastElementChild peroperty.
+   *
+   * @returns {VirtualElement|DOMNode} the last children or null.
+   */
   get lastElementChild() {
     return this.lastChild;
   }
@@ -166,11 +207,7 @@ class VirtualElement {
 
     this.nodeName = node.nodeName;
     this._className = '';
-    if (child && child.nodeType === 3) {
-      this.textContent = child.textContent;
-    } else {
-      this.textContent = '';
-    }
+    this.textContent = child && child.nodeType === 3 ? child.textContent : '';
 
     this.style = {};
 
@@ -263,7 +300,10 @@ class VirtualElement {
   }
 
   /**
+   * Create a new virtual element as clone of current one.
    *
+   * @param {boolean} withChildren - true to clone the children of the element.
+   * @returns {VirtualElement} exact copy of the current object.
    */
   cloneNode(withChildren) {
     const node = new VirtualElement(this.nodeName, this.attributes.toJSON());
@@ -340,6 +380,12 @@ class VirtualElement {
     }
   }
 
+  /**
+   * Create new attribute or update an exists attribute.
+   *
+   * @param {string} name - of the attribute.
+   * @param {string} value - of the attribute.
+   */
   setAttribute(name, value) {
     const attrs = this.attributes;
 
@@ -350,14 +396,31 @@ class VirtualElement {
     }
   }
 
+  /**
+   * Remove attribute.
+   *
+   * @param {string} name - of the attribute to remove.
+   */
   removeAttribute(name) {
     this.attributes.removeNamedItem(name);
   }
 
+  /**
+   * Get value of an attribute.
+   *
+   * @param {string} name - of the attribute.
+   * @returns {string|null} value of the attribute or null if attribute doesn't exist.
+   */
   getAttribute(name) {
     return this.attributes[name] ? this.attributes[name].value : null;
   }
 
+  /**
+   * Get list of children elements by tag name.
+   *
+   * @param {string} tagName - tag name to search.
+   * @returns {Array} list of elements.
+   */
   getElementsByTagName(tagName) {
     const result = [];
     const tag = tagName.toUpperCase();

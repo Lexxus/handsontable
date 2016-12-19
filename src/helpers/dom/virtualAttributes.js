@@ -9,11 +9,11 @@ class Attr {
 }
 
 /**
- * @class VirtualAttributes
+ * @class VirtualAttributes.
  */
 class VirtualAttributes {
   /**
-   * Constructor
+   * Constructor.
    *
    * @param {VirtualElement} element - instance.
    * @param {Object} [attributes] - default set of attributes.
@@ -28,6 +28,8 @@ class VirtualAttributes {
 
       for (let i = 0, n = 0, name; i < len; i++) {
         name = keys[i];
+
+        // prevent replace a method.
         if (typeof this[name] !== 'function') {
           this[n++] = this[name] = new Attr(name, attributes[name]);
           this.length++;
@@ -40,19 +42,26 @@ class VirtualAttributes {
   }
 
   /**
+   * Get attribute by name or number.
    *
+   * @param {string|number} i - index.
+   * @returns {Attr|null} attribure object or null.
    */
   item(i) {
-    return this[i];
+    return this[i] || null;
   }
 
   /**
+   * Set new attribute.
    *
+   * @param {Attr} attr - instance of Attr class to set.
+   * @param {boolean} [noClass] - true to prevent update className property in the element if set "class" attribute.
    */
   setNamedItem(attr, noClass) {
     const name = typeof attr === 'object' && attr.name;
     let i = this.length;
 
+    // prevent replace a method.
     if (name && typeof this[name] !== 'function') {
       if (!this[name]) {
         this.length++;
@@ -75,7 +84,9 @@ class VirtualAttributes {
   }
 
   /**
+   * Remove attribute by name.
    *
+   * @param {string} name - of an attribute to remove.
    */
   removeNamedItem(name) {
     const attr = this[name];
@@ -98,6 +109,11 @@ class VirtualAttributes {
     }
   }
 
+  /**
+   * Return attributes as JSON.
+   *
+   * @returns {Object} dictionary of pairs name:value.
+   */
   toJSON() {
     const json = {};
     let i = this.length;
