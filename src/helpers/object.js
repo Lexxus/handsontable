@@ -197,20 +197,20 @@ export function isObjectEquals(object1, object2) {
  * @returns {boolean}
  */
 export function isObject(obj) {
-  return Object.prototype.toString.call(obj) == '[object Object]';
+  return Object.prototype.toString.call(obj) === '[object Object]';
 }
 
 export function getPrototypeOf(obj) {
   var prototype;
 
   /* jshint ignore:start */
-  if (typeof obj.__proto__ == 'object') {
+  if (typeof obj.__proto__ === 'object') {
     prototype = obj.__proto__;
   } else {
     var oldConstructor,
       constructor = obj.constructor;
 
-    if (typeof obj.constructor == 'function') {
+    if (typeof obj.constructor === 'function') {
       oldConstructor = constructor;
 
       if (delete obj.constructor) {

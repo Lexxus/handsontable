@@ -65,8 +65,13 @@ class WalkontableViewport {
     let trimmingContainer = this.instance.wtOverlays.leftOverlay.trimmingContainer;
     let overflow;
     let stretchSetting = this.wot.getSetting('stretchH');
-    let docOffsetWidth = document.documentElement.offsetWidth;
     let preventOverflow = this.wot.getSetting('preventOverflow');
+    let docOffsetWidth;
+
+    if (!this._cachedDocOffsetWidth) {
+      this._cachedDocOffsetWidth = document.documentElement.offsetWidth;
+    }
+    docOffsetWidth = this._cachedDocOffsetWidth;
 
     if (preventOverflow) {
       return outerWidth(this.instance.wtTable.wtRootElement);

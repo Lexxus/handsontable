@@ -945,10 +945,11 @@ class Hooks {
    * ```
    */
   remove(key, callback, context = null) {
-    let bucket = this.getBucket(context);
+    const bucket = this.getBucket(context);
+    const item = bucket[key];
 
-    if (typeof bucket[key] !== 'undefined') {
-      if (bucket[key].indexOf(callback) >= 0) {
+    if (typeof item !== 'undefined') {
+      if (item.indexOf(callback) >= 0) {
         callback.skip = true;
 
         return true;
@@ -967,9 +968,10 @@ class Hooks {
    * @returns {Boolean} `true` for success, `false` otherwise.
    */
   has(key, context = null) {
-    let bucket = this.getBucket(context);
+    const bucket = this.getBucket(context);
+    const item = bucket[key];
 
-    return bucket[key] !== void 0 && bucket[key].length ? true : false;
+    return item !== void 0 && item.length ? true : false;
   }
 
   /**
@@ -993,50 +995,30 @@ class Hooks {
    * ```
    */
   run(context, key, p1, p2, p3, p4, p5, p6) {
-    {
-      const globalHandlers = this.globalBucket[key];
-      let index = -1;
-      let length = globalHandlers ? globalHandlers.length : 0;
+    let handlers = this.globalBucket[key];
+    let steps = 2;
+    let index = -1;
 
-      if (length) {
-        // Do not optimise this loop with arrayEach or arrow function! If you do You'll decrease perf because of GC.
-        while (++index < length) {
-          if (!globalHandlers[index] || globalHandlers[index].skip) {
-            continue;
-          }
-          // performance considerations - http://jsperf.com/call-vs-apply-for-a-plugin-architecture
-          let res = globalHandlers[index].call(context, p1, p2, p3, p4, p5, p6);
+    while (steps--) {
+      let length = handlers ? handlers.length : 0;
+      // Do not optimise this loop with arrayEach or arrow function! If you do You'll decrease perf because of GC.
+      while (++index < length) {
+        let handler = handlers[index];
+        if (handler && !handler.skip) {
+           // performance considerations - http://jsperf.com/call-vs-apply-for-a-plugin-architecture
+          let res = handler.call(context, p1, p2, p3, p4, p5, p6);
 
           if (res !== void 0) {
             p1 = res;
           }
-          if (globalHandlers[index] && globalHandlers[index].runOnce) {
-            this.remove(key, globalHandlers[index]);
+          if (handler.runOnce) {
+            this.remove(key, handler);
           }
         }
       }
-    }
-    {
-      const localHandlers = this.getBucket(context)[key];
-      let index = -1;
-      let length = localHandlers ? localHandlers.length : 0;
-
-      if (length) {
-        // Do not optimise this loop with arrayEach or arrow function! If you do You'll decrease perf because of GC.
-        while (++index < length) {
-          if (!localHandlers[index] || localHandlers[index].skip) {
-            continue;
-          }
-          // performance considerations - http://jsperf.com/call-vs-apply-for-a-plugin-architecture
-          let res = localHandlers[index].call(context, p1, p2, p3, p4, p5, p6);
-
-          if (res !== void 0) {
-            p1 = res;
-          }
-          if (localHandlers[index] && localHandlers[index].runOnce) {
-            this.remove(key, localHandlers[index], context);
-          }
-        }
+      if (steps) {
+        handlers = this.getBucket(context)[key];
+        index = -1;
       }
     }
 

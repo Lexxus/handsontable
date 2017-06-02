@@ -8,6 +8,10 @@ import {
   outerWidth
 } from './../../../helpers/dom/element';
 
+import {VirtualElement} from './../../../helpers/dom/virtualElement';
+
+const vTD = new VirtualElement('TD');
+
 /**
  * @class WalkontableTableRenderer
  */
@@ -150,7 +154,7 @@ class WalkontableTableRenderer {
    * @param {Number} columnsToRender
    */
   renderRows(totalRows, rowsToRender, columnsToRender) {
-    let lastTD, TR;
+    let TR;
     let visibleRowIndex = 0;
     let sourceRowIndex = this.rowFilter.renderedToSource(visibleRowIndex);
     let isWorkingOnClone = this.wtTable.isWorkingOnClone();
@@ -163,14 +167,14 @@ class WalkontableTableRenderer {
         // We have as much rows as needed for this clone
         break;
       }
-      TR = this.getOrCreateTrForRow(visibleRowIndex, TR);
+      TR = this.getOrCreateTrForRow(visibleRowIndex, TR, 'TH');
 
       // Render row headers
       this.renderRowHeaders(sourceRowIndex, TR);
       // Add and/or remove TDs to TR to match the desired number
       this.adjustColumns(TR, columnsToRender + this.rowHeaderCount);
 
-      lastTD = this.renderCells(sourceRowIndex, TR, columnsToRender);
+      this.renderCells(sourceRowIndex, TR, columnsToRender);
 
       if (!isWorkingOnClone || WalkontableOverlay.isOverlayTypeOf(this.wot.cloneOverlay, WalkontableOverlay.CLONE_BOTTOM)) {
         // Reset the oversized row cache for this row
@@ -338,14 +342,12 @@ class WalkontableTableRenderer {
         TD = TD.nextSibling; //http://jsperf.com/nextsibling-vs-indexed-childnodes
       }
       // If the number of headers has been reduced, we need to replace excess TH with TD
-      if (TD.nodeName == 'TH') {
+      if (TD.nodeName === 'TH') {
         TD = replaceThWithTd(TD, TR);
       }
-      if (!hasClass(TD, 'hide')) {
-        TD.className = '';
-      }
-      TD.removeAttribute('style');
-      this.wot.wtSettings.settings.cellRenderer(sourceRowIndex, sourceColIndex, TD);
+      vTD.reset('TD');
+      this.wot.wtSettings.settings.cellRenderer(sourceRowIndex, sourceColIndex, vTD);
+      vTD.applyTo(TD);
     }
 
     return TD;
@@ -357,9 +359,16 @@ class WalkontableTableRenderer {
   adjustColumnWidths(columnsToRender) {
     let scrollbarCompensation = 0;
     let sourceInstance = this.wot.cloneSource ? this.wot.cloneSource : this.wot;
-    let mainHolder = sourceInstance.wtTable.holder;
+    let sourceTable = sourceInstance.wtTable;
+    let mainHolder = sourceTable.holder;
+    let holderHeight;
 
-    if (mainHolder.offsetHeight < mainHolder.scrollHeight) {
+    if (!sourceTable.holderHeight) {
+      sourceTable.holderHeight = mainHolder.offsetHeight;
+    }
+    holderHeight = sourceTable.holderHeight;
+
+    if (holderHeight < mainHolder.scrollHeight) {
       scrollbarCompensation = getScrollbarWidth();
     }
     this.wot.wtViewport.columnsRenderCalculator.refreshStretching(this.wot.wtViewport.getViewportWidth() - scrollbarCompensation);
@@ -383,11 +392,11 @@ class WalkontableTableRenderer {
    * @param {HTMLTableRowElement} currentTr
    * @returns {HTMLTableCellElement}
    */
-  getOrCreateTrForRow(rowIndex, currentTr) {
+  getOrCreateTrForRow(rowIndex, currentTr, nodeName) {
     let TR;
 
     if (rowIndex >= this.wtTable.tbodyChildrenLength) {
-      TR = this.createRow();
+      TR = this.createRow(nodeName);
       this.appendToTbody(TR);
 
     } else if (rowIndex === 0) {
@@ -407,11 +416,11 @@ class WalkontableTableRenderer {
   /**
    * @returns {HTMLTableCellElement}
    */
-  createRow() {
+  createRow(nodeName) {
     let TR = document.createElement('TR');
 
     for (let visibleColIndex = 0; visibleColIndex < this.rowHeaderCount; visibleColIndex++) {
-      TR.appendChild(document.createElement('TH'));
+      TR.appendChild(document.createElement(nodeName || 'TD'));
     }
 
     return TR;
@@ -439,7 +448,7 @@ class WalkontableTableRenderer {
         TH = document.createElement('TH');
         TR.appendChild(TH);
 
-      } else if (TH.nodeName == 'TD') {
+      } else if (TH.nodeName === 'TD') {
         TH = replaceTdWithTh(TH, TR);
       }
       this.renderRowHeader(row, visibleColIndex, TH);
@@ -574,16 +583,6 @@ class WalkontableTableRenderer {
     while (count > desiredCount) {
       TR.removeChild(TR.lastChild);
       count--;
-    }
-  }
-
-  /**
-   * @param {Number} columnsToRender
-   */
-  removeRedundantColumns(columnsToRender) {
-    while (this.wtTable.tbodyChildrenLength > columnsToRender) {
-      this.TBODY.removeChild(this.TBODY.lastChild);
-      this.wtTable.tbodyChildrenLength--;
     }
   }
 }
