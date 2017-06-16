@@ -286,7 +286,8 @@ class VirtualElement {
         const child = el.children[i];
         let nodeChild = node.children[i];
 
-        while (nodeChild && nodeChild.nodeName !== child.nodeName) {
+        while (nodeChild && (nodeChild.nodeName !== child.nodeName ||
+            nodeChild.children.length !== child.children.length)) {
           node.removeChild(nodeChild);
           nodeChild = node.children[i];
         }
